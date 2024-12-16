@@ -100,22 +100,27 @@ class UploadEnabledTopics(FormView):
     success_url = reverse_lazy("core_app:upload_enabled_topics")
 
     def _topic_reconized(self, topic_name):
-        topic_mapping = {
-            "Cuestionario - IA (Tecnologías de Inteligencia Artificial para la Representación 3D)": "Tecnologías de Inteligencia Artificial para la Representación 3D",
-            "Cuestionario Habilitación - Fabricación 3D (V1)": "Fabricación 3D",
-            "Cuestionario Habilitación - Fabricación 3D (V2)": "Fabricación 3D",
-            "Cuestionario Habilitación- Robótica (Gladius Mini S)": "Robótica (Gladius Mini S)",
-            "Cuestionario Habilitación - Realidad Virtual y Aumentada": "Realidad Virtual y Aumentada",
-            "Cuestionario Habilitación - Internet de las cosas": "Internet de las cosas",
-            "Cuestionario Habilitacion - Robotica (Dron DJI Mini 3 Pro) V1": "Robotica (Dron DJI Mini 3 Pro)",
-            "Cuestionario Habilitacion - Robotica (Dron DJI Mini 3 Pro) V2": "Robotica (Dron DJI Mini 3 Pro)",
-            "Cuestionario Habilitación - Robotica (UGV Hiwonder JetAuto) V1": "Robótica (UGV  Hiwonder JetAuto)",
-            "Cuestionario Habilitación - Robotica (UGV Hiwonder JetAuto) V2": "Robótica (UGV  Hiwonder JetAuto)",
-            "Cuestionario Habilitación - Robótica (COBOT)": "Robótica (COBOT)",
-            "Cuestionario Habilitación IA - (Machine Learning)": "Machine Learning"
-        }
-        return topic_mapping.get(topic_name, None)
-
+        if 'Fabricación 3D' in topic_name:
+            return "Fabricación 3D"
+        elif 'Representación 3D' in topic_name:
+            return "Tecnologías de Inteligencia Artificial para la Representación 3D"
+        elif 'Gladius' in topic_name:
+            return "Robótica (Gladius Mini S)"
+        elif 'JetAuto' in topic_name:
+            return "Robótica (UGV  Hiwonder JetAuto)"
+        elif 'Dron DJI' in topic_name:
+            return "Robotica (Dron DJI Mini 3 Pro)"
+        elif 'COBOT' in topic_name:
+            return "Robótica (COBOT)"
+        elif 'Realidad' in topic_name:
+            return "Realidad Virtual y Aumentada"
+        elif 'Internet de las cosas' in topic_name:
+            return "Internet de las cosas"
+        elif 'Machine' in topic_name:
+            return "Machine Learning"
+        
+        return None
+        
     def form_valid(self, form):
         class_id = form.cleaned_data["class_id"]
         uploaded_file = self.request.FILES['file']
@@ -126,48 +131,69 @@ class UploadEnabledTopics(FormView):
         except Exception as e:
             messages.error(self.request, f"Error al leer el archivo: {e}")
             return self.form_invalid(form)
-        
+    
         # Obtener la clase seleccionada
         try:
             selected_class = ClassName.objects.get(pk=class_id.id)
         except ClassName.DoesNotExist:
             messages.error(self.request, "La clase seleccionada no existe.")
             return self.form_invalid(form)
-        
-        # Iterar sobre el DataFrame y actualizar los habilitadores
+    
+        # Diccionario para almacenar la mejor nota por estudiante y tópico
+        best_scores = {}
+
+        # Iterar sobre el DataFrame
         for _, row in df.iterrows():
             email = row['Dirección de correo electrónico']
             topic_name = row['Tareas']
             score = row['Puntos'] if not pd.isna(row['Puntos']) else 0
 
+            # Reconocer el tópico
+            topic_key = self._topic_reconized(topic_name)
+
+            if not topic_key:
+                # Si el tópico no es reconocido, omitir esta fila
+                continue
+
+            # Agrupar por correo y tópico
+            if (email, topic_key) not in best_scores:
+                best_scores[(email, topic_key)] = score
+            else:
+                # Mantener solo el puntaje más alto
+                best_scores[(email, topic_key)] = max(best_scores[(email, topic_key)], score)
+
+        # Procesar los datos agrupados y actualizar la base de datos
+        for (email, topic_key), score in best_scores.items():
             try:
                 # Buscar el estudiante por correo
                 student = Students.objects.get(email=email)
             except Students.DoesNotExist:
                 messages.error(self.request, f"El estudiante con correo {email} no existe.")
-                return self.form_invalid(form)
-
-            try:
-                # Buscar el tópico
-                topic = Topics.objects.get(name=self._topic_reconized(topic_name))
-                print(topic)
-            except Topics.DoesNotExist:
                 continue
 
             try:
+                # Buscar el tópico
+                topic = Topics.objects.get(name=topic_key)
+            except Topics.DoesNotExist:
+                messages.error(self.request, f"El tópico {topic_key} no existe.")
+                continue
+
+            try:
+                # Crear o actualizar el habilitador
                 enabled_topic, created = EnabledTopics.objects.update_or_create(
                     student=student,
                     class_name=selected_class,
                     topic=topic,
                     defaults={'score': score}
-                )
+            )
             except Exception as e:
-                messages.error(self.request, f"Error al actualizar o crear el habilitador: {e}")
-                return self.form_invalid(form)
+                messages.error(self.request, f"Error al actualizar o crear el habilitador para {email}: {e}")
+                continue
 
         # Mensaje de éxito
         messages.success(self.request, "Archivo procesado correctamente.")
         return super().form_valid(form)
+   
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
