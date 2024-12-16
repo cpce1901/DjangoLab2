@@ -27,7 +27,7 @@ class PrincipalClass(models.Model):
 class ClassName(models.Model):
     name = models.CharField(max_length=64)
     code = models.SmallIntegerField()
-    principal_class = models.ForeignKey(PrincipalClass, on_delete=models.CASCADE, null=True) 
+    principal_class = models.ForeignKey(PrincipalClass, on_delete=models.CASCADE, null=True, blank=True) 
     stage = models.ForeignKey(Stages, on_delete=models.CASCADE, null=True) 
 
     class Meta:
@@ -42,8 +42,8 @@ class ClassName(models.Model):
 class Students(models.Model):
     name = models.CharField('Nombre', max_length=64)
     last_name = models.CharField('Apellido', max_length=64)
-    email = models.CharField('Correo', max_length=128)
-    class_name = models.ManyToManyField(ClassName, verbose_name='Asignaturas')
+    email = models.CharField('Correo', max_length=128, unique=True)
+    class_name = models.ManyToManyField(ClassName, verbose_name='Asignaturas', blank=True)
 
     class Meta:
         verbose_name = 'Estudiante'

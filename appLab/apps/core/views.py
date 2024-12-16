@@ -1,5 +1,6 @@
 import pandas as pd
-from django.views.generic import FormView, View, CreateView
+from django.views.generic import FormView, View, CreateView, ListView, UpdateView
+from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth import login, logout, authenticate
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
@@ -10,7 +11,7 @@ from .forms import LoginForm, UploadStudentsForm, UploadEnabledTopicsForm, Stude
 from apps.students.models import Students, ClassName
 from apps.topics.models import Topics, EnabledTopics
 
-
+#OK
 class PersonalLoginView(FormView):
     template_name = 'core/login.html'
     form_class = LoginForm
@@ -33,8 +34,64 @@ class PersonalLoginView(FormView):
             return self.form_invalid(form)
 
 
+# OK
+class StudentListCreateView(ListView, FormView):
+    model = Students
+    template_name = 'core/students/students.html'
+    form_class = StudentForm
+    success_url = reverse_lazy('core_app:students')  # Redirige a la misma vista después de crear un estudiante
+
+    # Define el queryset explícitamente
+    def get_queryset(self):
+        return Students.objects.all()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['students'] = self.get_queryset()  # Mostrar todos los estudiantes
+        context['form'] = self.get_form()  # Agregar el formulario de creación de estudiante al contexto
+        return context
+
+    def form_valid(self, form):
+        # Guardar el nuevo estudiante
+        form.save()
+        messages.success(self.request, "Estudiante creado con éxito.")
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        # Si el formulario no es válido, no hacer nada
+        messages.error(self.request, "Hubo un error al crear el estudiante.")
+        return super().form_invalid(form)
+
+
+# OK
+class StudentUpdateView(UpdateView):
+    model = Students
+    form_class = StudentForm
+    template_name = 'core/students/update.html'  
+    success_url = reverse_lazy('core_app:students')
+
+    def form_valid(self, form):
+        messages.success(self.request, "Estudiante actualizado con éxito.")
+        return super().form_valid(form)
+    
+    def form_invalid(self, form):
+        messages.error(self.request, "Hubo un error al actualizar el estudiante.")
+        return super().form_invalid(form)
+
+
+# OK
+class StudentDeleteView(View):
+    def post(self, request, pk):
+        student = get_object_or_404(Students, pk=pk)
+        student.delete()
+        messages.success(self.request, "Estudiante eliminado con éxito.")
+        return redirect('core_app:students')
+
+
+
+
 class UploadStudents(FormView):
-    template_name = 'core/uploadStudents.html'
+    template_name = 'core/students/upload.html'
     form_class = UploadStudentsForm
     success_url = reverse_lazy("core_app:upload_students")
 
@@ -259,8 +316,10 @@ class ExportStudentsExcelView(View):
             # Redirigir a una página de error, por ejemplo, la lista de estudiantes
             return HttpResponseRedirect(reverse('students_list'))
         
+
 class StudentCreateView(CreateView):
     model = Students
     form_class = StudentForm
     template_name = 'core/create_student.html'
-    success_url = reverse_lazy('core_app:student_list') 
+    success_url = reverse_lazy('core_app:upload_students') 
+

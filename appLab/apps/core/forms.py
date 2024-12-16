@@ -69,6 +69,7 @@ class UploadEnabledTopicsForm(forms.Form):
         ),
     )
 
+
 class StudentForm(forms.ModelForm):
     class Meta:
         model = Students
@@ -76,23 +77,31 @@ class StudentForm(forms.ModelForm):
         widgets = {
             'class_name': forms.CheckboxSelectMultiple(
                 attrs={
-                    'class': 'border border-gray-300 rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-400 focus:outline-none'
+                    'class': 'border border-gray-300 rounded-lg px-2 py-2 mt-1 focus:ring-2 focus:ring-blue-400 focus:outline-none'
                 }
             ),
             'name': forms.TextInput(
                 attrs={
-                    'class': 'border border-gray-300 rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-400 focus:outline-none'
+                    'class': 'w-8/12 border border-gray-300 rounded-lg px-2 py-2 my-2 focus:ring-2 focus:ring-blue-400 focus:outline-none'
                 }
             ),
             'last_name': forms.TextInput(
                 attrs={
-                    'class': 'border border-gray-300 rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-400 focus:outline-none'
+                    'class': 'w-8/12 border border-gray-300 rounded-lg px-2 py-2 my-2 focus:ring-2 focus:ring-blue-400 focus:outline-none'
                 }
             ),
             'email': forms.TextInput(
                 attrs={
-                    'class': 'border border-gray-300 rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-400 focus:outline-none'
+                    'class': 'w-8/12 border border-gray-300 rounded-lg px-2 py-2 my-2 focus:ring-2 focus:ring-blue-400 focus:outline-none'
                 }
-            )      
+            )
         }
 
+    # Aseguramos que 'class_name' no sea obligatorio
+    class_name = forms.ModelMultipleChoiceField(
+        queryset=ClassName.objects.all(),  # Aquí se puede poner el queryset si es necesario
+        required=False,  # Hacer que 'class_name' no sea obligatorio
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'border border-gray-300 rounded-lg px-2 py-2 mt-1 focus:ring-2 focus:ring-blue-400 focus:outline-none'
+        })
+    )
