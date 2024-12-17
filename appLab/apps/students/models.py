@@ -35,7 +35,7 @@ class ClassName(models.Model):
         verbose_name_plural = 'Asignaturas'
 
     def __str__(self):
-        return f'{self.principal_class.code} - {self.name}'
+        return f'{self.stage} - {self.principal_class.code} - {self.name}'
 
 
 
