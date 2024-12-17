@@ -35,17 +35,17 @@
                             <div class="relative flex">
 
                                 <a href="{% url 'core_app:students' %}" id="dropdown-toggle"
-                                    class="flex items-center justify-between w-full py-2 px-3 {% if request.path == '/estudiantes' %}md:font-bold font-medium{% else %}md:font-light hover:font-medium font-light {% endif %} tracking-wide cursor-pointer px-3 py-2 rounded  text-lg text-slate-800  md:text-white  transition-all duration-300 ">
+                                    class="flex items-center justify-between w-full py-2 px-3 {% if 'estudiantes' in request.path %} md:font-bold font-medium{% else %}md:font-light hover:font-medium font-light {% endif %} tracking-wide cursor-pointer px-3 py-2 rounded  text-lg text-slate-800  md:text-white  transition-all duration-300 ">
                                     Estudiantes
                                 </a>
 
                                 <a href="{% url 'attendance_app:attendance_all' %}" id="dropdown-toggle"
-                                    class="flex items-center justify-between w-full py-2 px-3 {% if request.path == '/asistencias' %}md:font-bold font-medium{% else %}md:font-light hover:font-medium font-light {% endif %} tracking-wide cursor-pointer px-3 py-2 rounded  text-lg text-slate-800  md:text-white  transition-all duration-300 ">
+                                    class="flex items-center justify-between w-full py-2 px-3 {% if 'asistencia' in request.path %} md:font-bold font-medium{% else %}md:font-light hover:font-medium font-light {% endif %} tracking-wide cursor-pointer px-3 py-2 rounded  text-lg text-slate-800  md:text-white  transition-all duration-300 ">
                                     Asistencia
                                 </a>
 
                                 <a href="{% url 'core_app:upload_enabled_topics' %}" id="dropdown-toggle"
-                                    class="flex items-center justify-between w-full py-2 px-3 {% if '/habilitadores' in request.path %}md:font-bold font-medium{% else %}md:font-light hover:font-medium font-light {% endif %} tracking-wide cursor-pointer px-3 py-2 rounded  text-lg text-slate-800  md:text-white  transition-all duration-300 ">
+                                    class="flex items-center justify-between w-full py-2 px-3 {% if 'habilitadores' in request.path %} md:font-bold font-medium{% else %}md:font-light hover:font-medium font-light {% endif %} tracking-wide cursor-pointer px-3 py-2 rounded  text-lg text-slate-800  md:text-white  transition-all duration-300 ">
                                     Habilitadores
                                 </a>
                             </div>

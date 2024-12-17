@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import (
-PersonalLoginView, UploadStudents, UploadEnabledTopics, ExportStudentsExcelView, StudentCreateView, StudentListCreateView,
+PersonalLoginView, UploadStudents, UploadEnabledTopics, 
+ExportStudentsExcelView, StudentListCreateView,
 StudentUpdateView, StudentDeleteView
 )
 from django.contrib.auth.views import LogoutView

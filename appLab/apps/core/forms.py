@@ -9,7 +9,7 @@ class LoginForm(forms.Form):
             attrs={
                 "placeholder": "Usuario",
                 "id": "floatingInput",
-                "class": "input-field bg-gray-700 text-gray-300 focus:ring-blue-500 focus:border-blue-500",
+                "class": "w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm",
             }
         ),
     )
@@ -21,7 +21,7 @@ class LoginForm(forms.Form):
             attrs={
                 "placeholder": "Contraseña",
                 "id": "floatingPassword",
-                "class": "input-field bg-gray-700 text-gray-300 focus:ring-blue-500 focus:border-blue-500",
+                "class": "w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm",
             }
         ),
     )
@@ -30,11 +30,11 @@ class LoginForm(forms.Form):
 class UploadStudentsForm(forms.Form):
     class_id = forms.ModelChoiceField(
         queryset=ClassName.objects.all(),
-        label="Clase",
+        label="Asignatura",
         help_text="Selecciona la clase a la que deseas asignar estudiantes.",
         widget=forms.Select(
             attrs={
-                'class': 'w-full bg-gray-100 border-gray-200 text-gray-800 rounded-md shadow-sm focus:ring-blue-300 focus:border-blue-300',
+                'class': 'w-full border border-gray-300 rounded-lg px-2 py-2 my-2 focus:ring-2 focus:ring-blue-400 focus:outline-none',
             }
         ),
     )
@@ -45,7 +45,7 @@ class UploadStudentsForm(forms.Form):
         widget=forms.FileInput(
             attrs={
                 'accept': '.xls,.xlsx',
-                'class': 'w-full bg-gray-100 border-gray-200 text-gray-800 rounded-md shadow-sm focus:ring-blue-300 focus:border-blue-300',
+                'class': 'w-full border border-gray-300 rounded-lg px-2 py-2 my-2 focus:ring-2 focus:ring-blue-400 focus:outline-none',
             }
         ),
     )

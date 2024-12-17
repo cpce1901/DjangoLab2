@@ -1,12 +1,12 @@
 import pandas as pd
-from django.views.generic import FormView, View, CreateView, ListView, UpdateView
+from django.views.generic import FormView, View, ListView, UpdateView
 from django.shortcuts import get_object_or_404, redirect
-from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect
 from django.db import transaction
-from django.db.models import Q
 from .forms import LoginForm, UploadStudentsForm, UploadEnabledTopicsForm, StudentForm
 from apps.students.models import Students, ClassName
 from apps.topics.models import Topics, EnabledTopics
@@ -88,8 +88,7 @@ class StudentDeleteView(View):
         return redirect('core_app:students')
 
 
-
-
+# OK
 class UploadStudents(FormView):
     template_name = 'core/students/upload.html'
     form_class = UploadStudentsForm
@@ -144,13 +143,62 @@ class UploadStudents(FormView):
         return super().form_valid(form)
     
     
-    def get_context_data(self, **kwargs):
-        context = super(UploadStudents, self).get_context_data(**kwargs)
-        students = Students.objects.all()
-        context['students'] = students
-        return context
+# OK
+class ExportStudentsExcelView(View):
+    def get(self, request, *args, **kwargs):
+        try:
+            # Obtener todos los estudiantes
+            students = Students.objects.all()
+
+            # Crear una lista para almacenar los datos que vamos a exportar
+            data = []
+
+            for student in students:
+                # Obtener las asignaturas del estudiante
+                class_names = student.class_name.all()
+                for class_name in class_names:
+                    # Obtener las habilitaciones de los estudiantes para la asignatura
+                    enabled_topics = EnabledTopics.objects.filter(student=student, class_name=class_name)
+                    for enabled_topic in enabled_topics:
+                        data.append({
+                            'ID': student.id,
+                            #'RUT': '',
+                            'Estudiante': student.name + " " + student.last_name,
+                            'Año': class_name.stage.year,
+                            'Semestre': class_name.stage.semester,
+                            'Carrera': class_name.principal_class.code,
+                            'Sede': 'BES',
+                            'Asignatura': class_name.name,
+                            'Tecnologia': enabled_topic.topic.name,
+                            'Puntaje': enabled_topic.score,
+                        })
+
+            # Crear un DataFrame de Pandas con los datos
+            df = pd.DataFrame(data)
+
+            # Crear la respuesta HTTP con el archivo Excel
+            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename="estudiantes_habilitadores.xlsx"'
+
+            # Guardar el DataFrame como un archivo Excel en la respuesta
+            with pd.ExcelWriter(response, engine='openpyxl') as writer:
+                df.to_excel(writer, index=False)
+
+            # Agregar un mensaje de éxito para que se muestre después de la descarga
+            messages.success(request, "Archivo Excel generado exitosamente.")
+
+            # Finalmente, devolver la respuesta del archivo Excel
+            return response
+
+        except Exception as e:
+            # En caso de error, agregar un mensaje de error
+            messages.error(request, f"Hubo un error al generar el archivo: {str(e)}")
+
+            # Redirigir a una página de error, por ejemplo, la lista de estudiantes
+            return HttpResponseRedirect(reverse('students_list'))
 
 
+# OK
 class UploadEnabledTopics(FormView):
     template_name = 'core/uploadEnabledTopics.html'
     form_class = UploadEnabledTopicsForm
@@ -263,63 +311,7 @@ class UploadEnabledTopics(FormView):
         return context
  
     
-class ExportStudentsExcelView(View):
-    def get(self, request, *args, **kwargs):
-        try:
-            # Obtener todos los estudiantes
-            students = Students.objects.all()
 
-            # Crear una lista para almacenar los datos que vamos a exportar
-            data = []
-
-            for student in students:
-                # Obtener las asignaturas del estudiante
-                class_names = student.class_name.all()
-                for class_name in class_names:
-                    # Obtener las habilitaciones de los estudiantes para la asignatura
-                    enabled_topics = EnabledTopics.objects.filter(student=student, class_name=class_name)
-                    for enabled_topic in enabled_topics:
-                        data.append({
-                            'ID': student.id,
-                            #'RUT': '',
-                            'Estudiante': student.name + " " + student.last_name,
-                            'Año': class_name.stage.year,
-                            'Semestre': class_name.stage.semester,
-                            'Carrera': class_name.principal_class.code,
-                            'Sede': 'BES',
-                            'Asignatura': class_name.name,
-                            'Tecnologia': enabled_topic.topic.name,
-                            'Puntaje': enabled_topic.score,
-                        })
-
-            # Crear un DataFrame de Pandas con los datos
-            df = pd.DataFrame(data)
-
-            # Crear la respuesta HTTP con el archivo Excel
-            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            response['Content-Disposition'] = 'attachment; filename="estudiantes_habilitadores.xlsx"'
-
-            # Guardar el DataFrame como un archivo Excel en la respuesta
-            with pd.ExcelWriter(response, engine='openpyxl') as writer:
-                df.to_excel(writer, index=False)
-
-            # Agregar un mensaje de éxito para que se muestre después de la descarga
-            messages.success(request, "Archivo Excel generado exitosamente.")
-
-            # Finalmente, devolver la respuesta del archivo Excel
-            return response
-
-        except Exception as e:
-            # En caso de error, agregar un mensaje de error
-            messages.error(request, f"Hubo un error al generar el archivo: {str(e)}")
-
-            # Redirigir a una página de error, por ejemplo, la lista de estudiantes
-            return HttpResponseRedirect(reverse('students_list'))
         
 
-class StudentCreateView(CreateView):
-    model = Students
-    form_class = StudentForm
-    template_name = 'core/create_student.html'
-    success_url = reverse_lazy('core_app:upload_students') 
 
